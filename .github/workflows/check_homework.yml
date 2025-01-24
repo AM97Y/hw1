@@ -26,7 +26,7 @@ jobs:
       - name: Run homework checker
         id: run-homework-checker
         run: |
-          python homework_checker.py  # Запуск скрипта проверки (мы его напишем ниже)
+          python .github/workflows/homework_checker.py  # Запуск скрипта проверки (мы его напишем ниже)
 
       - name: Add comment to pull request
         uses: actions/github-script@v6
