@@ -32,4 +32,45 @@ jobs:
           # Заголовок текущего PR
           CURRENT_PR_TITLE="${{ github.event.pull_request.title }}"
 
-          #
+          # Проверка на схожесть заголовков
+          SIMILAR_PR_FOUND=false
+          for pr in $(echo "$OPEN_PRS" | jq -r '.[].title'); do
+            if [[ "$pr" == *"$CURRENT_PR_TITLE"* ]]; then
+              SIMILAR_PR_FOUND=true
+              break
+            fi
+          done
+
+          # Если найден похожий PR, то прерываем выполнение
+          if [ "$SIMILAR_PR_FOUND" == "true" ]; then
+            echo "Similar PR already exists, aborting."
+            exit 1  # Завершаем workflow с ошибкой
+          else
+            echo "No similar PR found, proceeding with homework check."
+          fi
+
+      - name: Run homework checker
+        id: run-homework-checker
+        run: |
+          python homework_checker.py > result.log
+
+      - name: Add feedback as a comment on PR
+        uses: actions/github-script@v6
+        if: ${{ github.event_name == 'pull_request' }}
+        with:
+          script: |
+            const fs = require('fs');
+            const resultLog = fs.readFileSync('${{ github.workspace }}/result.log', 'utf8');
+            const commentBody = `
+            ### Homework Check Result:
+
+            \`\`\`
+            ${resultLog}
+            \`\`\`
+            `;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: commentBody
+            })
