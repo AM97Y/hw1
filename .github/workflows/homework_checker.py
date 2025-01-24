@@ -53,8 +53,8 @@ print("Совет: Подумайте над улучшением.")
 #         result_log += f"### Code Block:\n{block}\n### Feedback:\n{feedback}\n\n"
 
     # Записываем результат в файл, чтобы его можно было использовать в GitHub Actions
-    with open("result.log", "w") as result_file:
-        result_file.write(result_log)
+ with open("result.log", "w") as result_file:
+     result_file.write(result_log)
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
