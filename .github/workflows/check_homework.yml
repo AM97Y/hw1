@@ -25,7 +25,7 @@ jobs:
           fi
       - name: Create homework_checker.py from secret
         run: |
-          echo "${{ secrets.HOMEWORK_CHECKER_PY }}" > homework_checker.py
+          echo "${{ secrets.HOMEWORK_CHECKER }}" > homework_checker.py
 
       - name: Check for similar open PRs
         id: check-similar-prs
