@@ -3,11 +3,12 @@ name: Check Homework
 on:
   pull_request:
     branches:
-      - main
+      - main  # Или другая ветка, куда студенты делают PR
 
 jobs:
   check_code:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # Используем виртуальную машину Ubuntu
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -19,35 +20,16 @@ jobs:
 
       - name: Install dependencies
         run: |
-          if [ -f requirements.txt ]; then
-            pip install -r requirements.txt
-          fi
+          pip install -r requirements.txt
 
-      - name: Run homework checker
-        id: run-homework-checker
+      - name: Check for similar open PRs
+        id: check-similar-prs
         run: |
-          python scripts/homework_checker.py > result.log
+          # Получаем список всех открытых PR
+          OPEN_PRS=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls?state=open")
+          
+          # Заголовок текущего PR
+          CURRENT_PR_TITLE="${{ github.event.pull_request.title }}"
 
-      - name: Add feedback as a comment on PR
-        uses: actions/github-script@v6
-        if: ${{ github.event_name == 'pull_request' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} #  <--- Здесь ключ
-        with:
-          script: |
-            const fs = require('fs');
-            const resultLog = fs.readFileSync('${{ github.workspace }}/result.log', 'utf8');
-            const commentBody = `
-            ### Feedback for Homework:
-
-            \`\`\`
-            ${resultLog}
-            \`\`\`
-            `;
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: commentBody
-            });
-
+          #
