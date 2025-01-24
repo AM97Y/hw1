@@ -5,6 +5,9 @@ on:
     branches:
       - main  # Или другая ветка, куда студенты делают PR
 
+permissions:
+  pull-requests: write
+
 jobs:
   check_code:
     runs-on: ubuntu-latest  # Используем виртуальную машину Ubuntu
