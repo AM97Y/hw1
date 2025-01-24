@@ -34,7 +34,7 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const resultLog = fs.readFileSync('.github/workflows/result.log', 'utf8');
+            const resultLog = fs.readFileSync('.result.log', 'utf8');
             const commentBody = `
             ### Homework Check Result:
             \`\`\`
