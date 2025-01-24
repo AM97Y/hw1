@@ -1,0 +1,85 @@
+name: Check Homework
+
+on:
+  pull_request:
+    branches:
+      - main  # Или другая ветка, куда студенты делают PR
+
+permissions:
+  pull-requests: write
+
+jobs:
+  check_code:
+    runs-on: ubuntu-latest  # Используем виртуальную машину Ubuntu
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt  # Установка зависимостей
+          fi
+      - name: Create homework_checker.py from secret
+        run: |
+          echo "${{ secrets.HOMEWORK_CHECKER }}" > homework_checker.py
+
+      - name: Check for similar open PRs
+        id: check-similar-prs
+        run: |
+          # Получаем список всех открытых PR
+          OPEN_PRS=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls?state=open")
+          
+          # Заголовок текущего PR
+          CURRENT_PR_TITLE="${{ github.event.pull_request.title }}"
+          CURRENT_PR_NUMBER="${{ github.event.pull_request.number }}"
+
+          # Проверка на схожесть заголовков
+          SIMILAR_PR_FOUND=false
+          for pr in $(echo "$OPEN_PRS" | jq -r '.[] | select(.number != '$CURRENT_PR_NUMBER') | .title'); do
+            if [[ "$pr" == *"$CURRENT_PR_TITLE"* ]]; then
+              SIMILAR_PR_FOUND=true
+              break
+            fi
+          done
+
+          # Если найден похожий PR, то прерываем выполнение
+          if [ "$SIMILAR_PR_FOUND" == "true" ]; then
+            echo "Similar PR already exists, aborting."
+            exit 1  # Завершаем workflow с ошибкой
+          else
+            echo "No similar PR found, proceeding with homework check."
+          fi
+
+      - name: Run homework checker
+        id: run-homework-checker
+        run: |
+          python homework_checker.py > result.log
+
+      - name: Add feedback as a comment on PR
+        uses: actions/github-script@v6
+        if: ${{ github.event_name == 'pull_request' }}
+        with:
+          script: |
+            const fs = require('fs');
+            const resultLog = fs.readFileSync('${{ github.workspace }}/result.log', 'utf8');
+            const commentBody = `
+            ### Homework Check Result:
+
+            \`\`\`
+            ${resultLog}
+            \`\`\`
+            `;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: commentBody
+            })
