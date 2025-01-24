@@ -3,38 +3,47 @@ name: Check Homework
 on:
   pull_request:
     branches:
-      - main # Или другая ветка, куда студенты делают PR
+      - main  # Укажите ветку, в которую студенты будут делать PR
 
 jobs:
   check_code:
-    runs-on: ubuntu-latest # Используем виртуальную машину Ubuntu
+    runs-on: ubuntu-latest  # Используем виртуальную машину Ubuntu
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3 # Выгружаем код репозитория
+        uses: actions/checkout@v3  # Выгружаем код репозитория
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9' # Укажите нужную версию Python
+          python-version: '3.9'  # Укажите нужную версию Python
 
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt # Установка зависимостей (если есть)
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt  # Установка зависимостей (если есть)
+          fi
 
       - name: Run homework checker
         id: run-homework-checker
         run: |
-          python homework_checker.py # Выполняем ваш скрипт проверки
-        
+          python homework_checker.py  # Запуск скрипта проверки (мы его напишем ниже)
+
       - name: Add comment to pull request
         uses: actions/github-script@v6
         if: ${{ github.event_name == 'pull_request' }}
         with:
           script: |
-            const output = `${{ steps.run-homework-checker.outputs.stdout }}`
+            const fs = require('fs');
+            const resultLog = fs.readFileSync('result.log', 'utf8');
+            const commentBody = `
+            ### Homework Check Result:
+            \`\`\`
+            ${resultLog}
+            \`\`\`
+            `;
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: output
+              body: commentBody
             })
