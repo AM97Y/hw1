@@ -1,6 +1,7 @@
 import time
 import os
 import subprocess
+
 # Здесь должен быть ваш реальный код проверки
 # 1. Конвертация
 # например: jupyter nbconvert --to python <файл>.ipynb
@@ -8,17 +9,26 @@ import subprocess
 # 3. Фидбек
 # 4. Советы
 def get_result_string(feedback_list):
-   return "\n".join([f"Блок: {index}, Отзыв: {feedback}" for index, feedback in enumerate(feedback_list)])
+    return "\n".join(
+        [
+            f"Блок: {index}, Отзыв: {feedback}"
+            for index, feedback in enumerate(feedback_list)
+        ]
+    )
+
 
 # Пример вызова
 feedback_list = ["Отлично", "Хорошо", "Есть недочеты"]
 
 result_string = get_result_string(feedback_list)
 
-time.sleep(5) # Задержка для демонстрации
+time.sleep(5)  # Задержка для демонстрации
 print("Проверка запущена. Результаты будут в комментариях к Pull Request.")
 print(f"Результаты:\n {result_string}")
 print("Совет: Подумайте над улучшением.")
+
+with open("result.log", "w") as result_file:
+    result_file.write(result_string)
 # import openai
 
 # # Настроим API-ключ OpenAI для работы с GPT-4
@@ -52,9 +62,8 @@ print("Совет: Подумайте над улучшением.")
 #         feedback = analyze_code_block(block)
 #         result_log += f"### Code Block:\n{block}\n### Feedback:\n{feedback}\n\n"
 
-    # Записываем результат в файл, чтобы его можно было использовать в GitHub Actions
- with open("result.log", "w") as result_file:
-     result_file.write(result_log)
+# Записываем результат в файл, чтобы его можно было использовать в GitHub Actions
+
 
 # if __name__ == "__main__":
 #     main()
