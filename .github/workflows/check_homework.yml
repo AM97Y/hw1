@@ -33,10 +33,11 @@ jobs:
           
           # Заголовок текущего PR
           CURRENT_PR_TITLE="${{ github.event.pull_request.title }}"
+          CURRENT_PR_NUMBER="${{ github.event.pull_request.number }}"
 
           # Проверка на схожесть заголовков
           SIMILAR_PR_FOUND=false
-          for pr in $(echo "$OPEN_PRS" | jq -r '.[].title'); do
+          for pr in $(echo "$OPEN_PRS" | jq -r '.[] | select(.number != '$CURRENT_PR_NUMBER') | .title'); do
             if [[ "$pr" == *"$CURRENT_PR_TITLE"* ]]; then
               SIMILAR_PR_FOUND=true
               break
